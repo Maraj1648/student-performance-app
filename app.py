@@ -174,7 +174,6 @@ with st.expander("⚙️ A few more options (optional)"):
     with c2:
         Mjob = st.selectbox("Mother's job", ["teacher", "health", "services", "at_home", "other"], index=4)
         Fjob = st.selectbox("Father's job", ["teacher", "health", "services", "at_home", "other"], index=4)
-        guardian = st.selectbox("Guardian", ["mother", "father", "other"], index=0)
 
 st.divider()
 
@@ -187,7 +186,7 @@ if predict_clicked:
     record = DEFAULTS.copy()
     record.update({
         "sex": sex, "age": age, "Medu": Medu, "Fedu": Fedu, "Mjob": Mjob, "Fjob": Fjob,
-        "guardian": guardian, "studytime": studytime, "failures": failures,
+        "studytime": studytime, "failures": failures,
         "schoolsup": schoolsup, "paid": paid, "higher": higher, "romantic": romantic,
         "famrel": famrel, "goout": goout, "Dalc": Dalc, "Walc": Walc, "health": health,
         "absences": absences,
