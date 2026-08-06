@@ -230,39 +230,39 @@ if predict_clicked:
     X_input = scaled[selected_features]
 
     pred = model.predict(X_input)[0]
-    proba = model.predict_proba(X_input)[0]
-    confidence = proba.max()
 
     st.subheader("Prediction Result")
-    r1, r2 = st.columns([2, 1])
-    with r1:
-        if pred == 1:
-            st.success(f"✅ Predicted: **PASS**  (confidence: {proba[1]*100:.1f}%)")
-        else:
-            st.error(f"⚠️ Predicted: **FAIL**  (confidence: {proba[0]*100:.1f}%)")
+    if pred == 1:
+        st.success("✅ Predicted outcome: **PASS**")
+    else:
+        st.error("⚠️ Predicted outcome: **FAIL**")
+    st.caption(
+        "This is a directional estimate from a small historical dataset, not a precise "
+        "probability — use it to start a conversation about support, not as a verdict."
+    )
 
-        st.write("Class probabilities:")
-        prob_df = pd.DataFrame({"Outcome": ["Fail", "Pass"], "Probability": [proba[0], proba[1]]})
-        st.bar_chart(prob_df.set_index("Outcome"))
+    # ---- Personalized key-factors table (this student's values, ranked by model importance) ----
+    def display_value(feat: str):
+        """Resolve a selected-feature name back to something human-readable for this student."""
+        if feat in record:
+            return record[feat]
+        for base in multi_cols:
+            prefix = base + "_"
+            if feat.startswith(prefix) and feat in raw_df.columns:
+                return "Yes" if raw_df.iloc[0][feat] == 1 else "No"
+        return raw_df.iloc[0][feat] if feat in raw_df.columns else "—"
 
-        if confidence > 0.95:
-            st.info(
-                "ℹ️ **About that near-100% confidence:** the current model (an untuned Decision "
-                "Tree) tends to be overconfident — it wasn't hyperparameter-tuned like the other "
-                "candidates, so its leaf nodes are 'pure' and it rarely reports anything but near-0% "
-                "or near-100%. Treat this as *which way the model leans*, not a precise probability. "
-                "Constraining `max_depth`/`min_samples_leaf` during training, or using the tuned "
-                "Random Forest instead, would give more realistic confidence scores."
-            )
-
-    with r2:
-        if hasattr(model, "feature_importances_"):
-            st.write("**What mattered most to the model overall:**")
-            imp = pd.Series(model.feature_importances_, index=selected_features)
-            imp = imp[imp > 0].sort_values(ascending=True).tail(6)
-            imp.index = [friendly(i) for i in imp.index]
-            st.bar_chart(imp)
-            st.caption("These are the model's global top factors, not specific to your inputs.")
+    if hasattr(model, "feature_importances_"):
+        imp = pd.Series(model.feature_importances_, index=selected_features)
+        imp = imp[imp > 0].sort_values(ascending=False).head(6)
+        if len(imp) > 0:
+            st.write("**Key factors behind this prediction (for this student):**")
+            factor_table = pd.DataFrame({
+                "Factor": [friendly(f) for f in imp.index],
+                "This student's value": [display_value(f) for f in imp.index],
+            })
+            st.table(factor_table.set_index("Factor"))
+            st.caption("Ranked by how much the model relies on each factor overall.")
 
     # ---- Simple, student-facing tips based on the inputs given ----
     tips = []
