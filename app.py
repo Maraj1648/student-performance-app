@@ -95,10 +95,13 @@ def friendly(col: str) -> str:
 
 
 DEFAULTS = {
-    "school": "GP", "sex": "F", "address": "U", "famsize": "GT3", "Pstatus": "T",
-    "famsup": "yes", "paid": "no", "nursery": "yes", "higher": "yes",
-    "internet": "yes", "romantic": "no",
-    "Mjob": "other", "Fjob": "other", "reason": "course", "guardian": "mother",
+    # Fixed — not shown anywhere in the UI; these rarely change the prediction much.
+    "school": "GP", "address": "U", "famsize": "GT3", "Pstatus": "T",
+    "nursery": "yes", "reason": "course", "famsup": "yes", "activities": "yes",
+    "internet": "yes", "freetime": 3,
+    # Editable in the "More options" expander — sensible starting points.
+    "sex": "F", "paid": "no", "guardian": "mother", "Mjob": "other", "Fjob": "other",
+    "traveltime": 1, "higher": "yes",
 }
 
 # ----------------------------------------------------------------------------
@@ -119,19 +122,16 @@ with st.expander("ℹ️ About this tool and its limits", expanded=False):
   secondary-school students, Math course. Results reflect *that* population and may not generalize.
 - Grades `G1`/`G2` were intentionally excluded to keep this an **early-warning** tool rather than a
   "grade calculator."
-- The current model can be overconfident (see the note under your result). Treat the confidence
-  score as directional, not exact.
+- Treat the prediction as directional, not exact — it's meant to start a conversation, not settle one.
         """
     )
 
 st.divider()
 
 # ----------------------------------------------------------------------------
-# 4. Inputs — grouped into tabs so it doesn't feel like one giant form
+# 4. Inputs — two simple tabs, plus a few optional extras tucked away
 # ----------------------------------------------------------------------------
-tab_academic, tab_family, tab_lifestyle, tab_advanced = st.tabs(
-    ["📚 Academics", "👪 Family", "🎈 Lifestyle & Social", "⚙️ Advanced (optional)"]
-)
+tab_academic, tab_home = st.tabs(["📚 Academics", "👪 Family & Lifestyle"])
 
 with tab_academic:
     c1, c2 = st.columns(2)
@@ -142,17 +142,11 @@ with tab_academic:
             format_func=lambda x: {1: "< 2 hours", 2: "2–5 hours", 3: "5–10 hours", 4: "> 10 hours"}[x],
         )
         failures = st.selectbox("Past class failures", [0, 1, 2, 3], index=0)
-        traveltime = st.selectbox(
-            "Travel time to school", [1, 2, 3, 4], index=0,
-            format_func=lambda x: {1: "< 15 min", 2: "15–30 min", 3: "30–60 min", 4: "> 1 hour"}[x],
-        )
     with c2:
         absences = st.slider("Number of school absences (this term)", 0, 75, 4)
         schoolsup = st.radio("Extra educational school support?", ["yes", "no"], index=1, horizontal=True)
-        activities = st.radio("Extra-curricular activities?", ["yes", "no"], index=0, horizontal=True)
-        higher = st.radio("Wants to pursue higher education?", ["yes", "no"], index=0, horizontal=True)
 
-with tab_family:
+with tab_home:
     c1, c2 = st.columns(2)
     with c1:
         Medu = st.selectbox(
@@ -163,36 +157,23 @@ with tab_family:
             "Father's education", [0, 1, 2, 3, 4], index=2,
             format_func=lambda x: {0: "None", 1: "Primary", 2: "5th–9th grade", 3: "Secondary", 4: "Higher"}[x],
         )
-        famsup = st.radio("Family educational support at home?", ["yes", "no"], index=0, horizontal=True)
-    with c2:
         famrel = st.slider("Family relationship quality", 1, 5, 4, help="1 = bad, 5 = excellent")
-        Mjob = st.selectbox("Mother's job", ["teacher", "health", "services", "at_home", "other"], index=4)
-        Fjob = st.selectbox("Father's job", ["teacher", "health", "services", "at_home", "other"], index=4)
-
-with tab_lifestyle:
-    c1, c2 = st.columns(2)
-    with c1:
-        freetime = st.slider("Free time after school", 1, 5, 3, help="1 = low, 5 = high")
         goout = st.slider("Going out with friends", 1, 5, 3, help="1 = low, 5 = high")
-        health = st.slider("Current health status", 1, 5, 4, help="1 = bad, 5 = very good")
     with c2:
+        health = st.slider("Current health status", 1, 5, 4, help="1 = bad, 5 = very good")
         Dalc = st.slider("Workday alcohol consumption", 1, 5, 1, help="1 = low, 5 = high")
         Walc = st.slider("Weekend alcohol consumption", 1, 5, 1, help="1 = low, 5 = high")
         romantic = st.radio("Currently in a relationship?", ["yes", "no"], index=1, horizontal=True)
 
-with tab_advanced:
-    st.caption("These default to typical dataset values — only change them if relevant.")
+with st.expander("⚙️ A few more options (optional)"):
     c1, c2 = st.columns(2)
     with c1:
-        school = st.selectbox("School", ["GP", "MS"], index=0)
         sex = st.selectbox("Sex", ["F", "M"], index=0)
-        address = st.selectbox("Home address type", ["U", "R"], index=0, format_func=lambda x: "Urban" if x == "U" else "Rural")
-        famsize = st.selectbox("Family size", ["LE3", "GT3"], index=1, format_func=lambda x: "≤ 3 people" if x == "LE3" else "> 3 people")
-    with c2:
-        Pstatus = st.selectbox("Parents' cohabitation status", ["T", "A"], index=0, format_func=lambda x: "Living together" if x == "T" else "Apart")
+        higher = st.radio("Wants to pursue higher education?", ["yes", "no"], index=0, horizontal=True)
         paid = st.radio("Extra paid classes?", ["yes", "no"], index=1, horizontal=True)
-        nursery = st.radio("Attended nursery school?", ["yes", "no"], index=0, horizontal=True)
-        reason = st.selectbox("Reason for choosing this school", ["home", "reputation", "course", "other"], index=2)
+    with c2:
+        Mjob = st.selectbox("Mother's job", ["teacher", "health", "services", "at_home", "other"], index=4)
+        Fjob = st.selectbox("Father's job", ["teacher", "health", "services", "at_home", "other"], index=4)
         guardian = st.selectbox("Guardian", ["mother", "father", "other"], index=0)
 
 st.divider()
@@ -205,12 +186,10 @@ predict_clicked = st.button("🔮 Predict Outcome", type="primary", use_containe
 if predict_clicked:
     record = DEFAULTS.copy()
     record.update({
-        "school": school, "sex": sex, "address": address, "famsize": famsize, "Pstatus": Pstatus,
-        "age": age, "Medu": Medu, "Fedu": Fedu, "Mjob": Mjob, "Fjob": Fjob, "reason": reason,
-        "guardian": guardian, "traveltime": traveltime, "studytime": studytime, "failures": failures,
-        "schoolsup": schoolsup, "famsup": famsup, "paid": paid, "activities": activities,
-        "nursery": nursery, "higher": higher, "romantic": romantic, "famrel": famrel,
-        "freetime": freetime, "goout": goout, "Dalc": Dalc, "Walc": Walc, "health": health,
+        "sex": sex, "age": age, "Medu": Medu, "Fedu": Fedu, "Mjob": Mjob, "Fjob": Fjob,
+        "guardian": guardian, "studytime": studytime, "failures": failures,
+        "schoolsup": schoolsup, "paid": paid, "higher": higher, "romantic": romantic,
+        "famrel": famrel, "goout": goout, "Dalc": Dalc, "Walc": Walc, "health": health,
         "absences": absences,
     })
 
