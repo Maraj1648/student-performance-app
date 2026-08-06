@@ -115,17 +115,6 @@ st.write(
     "use it as a conversation-starter for support, not a verdict."
 )
 
-with st.expander("ℹ️ About this tool and its limits", expanded=False):
-    st.markdown(
-        """
-- Trained on the **UCI Student Performance** dataset (Cortez & Silva, 2008) — 395 Portuguese
-  secondary-school students, Math course. Results reflect *that* population and may not generalize.
-- Grades `G1`/`G2` were intentionally excluded to keep this an **early-warning** tool rather than a
-  "grade calculator."
-- Treat the prediction as directional, not exact — it's meant to start a conversation, not settle one.
-        """
-    )
-
 st.divider()
 
 # ----------------------------------------------------------------------------
